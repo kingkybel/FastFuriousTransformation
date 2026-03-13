@@ -1,0 +1,8 @@
+/build*
+/cmake-build-*
+/.idea
+/data
+/test/integration/logs
+/test/integration/profiles
+/Testing
+/.zen*
