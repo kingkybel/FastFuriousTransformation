@@ -26,10 +26,11 @@
 #define NS_UTIL_CONTANTS_H_INCLUDED
 
 #include <cstdint>
+#include <array>
 namespace util
 {
 // clang-format off
-constexpr int64_t powTwo[] = {
+const std::array<int64_t,63> powTwo = {
  1LL << 0LL,  1LL << 1LL,  1LL << 2LL,  1LL << 3LL,  1LL << 4LL,  1LL << 5LL,  1LL << 6LL,  1LL << 7LL,
  1LL << 8LL,  1LL << 9LL,  1LL << 10LL, 1LL << 11LL, 1LL << 12LL, 1LL << 13LL, 1LL << 14LL, 1LL << 15LL,
  1LL << 16LL, 1LL << 17LL, 1LL << 18LL, 1LL << 19LL, 1LL << 20LL, 1LL << 21LL, 1LL << 22LL, 1LL << 23LL,

@@ -32,6 +32,7 @@
 #include <gtest/gtest.h>
 #include <iostream>
 #include <random>
+#include <ranges>
 #include <string>
 
 using namespace std;
@@ -44,10 +45,12 @@ class FFTTest : public ::testing::Test
 
     void SetUp() override
     {
+        // just in case
     }
 
     void TearDown() override
     {
+        // just in case
     }
 
     vector<FFT::FloatType> randomSample()
@@ -85,10 +88,10 @@ class FFTTest : public ::testing::Test
         return sampleVec;
     }
 
-    vector<FFT::FloatType> circularShift(vector<FFT::FloatType> const& vec, int shift)
+    vector<FFT::FloatType> circularShift(vector<FFT::FloatType> const& vec, int shift) const
     {
         vector<FFT::FloatType> shifted_vec = vec;
-        std::rotate(shifted_vec.begin(), shifted_vec.begin() + shift, shifted_vec.end());
+        std::ranges::rotate(shifted_vec, shifted_vec.begin() + shift);
         return shifted_vec;
     }
 
@@ -122,7 +125,7 @@ class FFTTest : public ::testing::Test
         return sampleVec;
     }
 
-    vector<FFT::FloatType> naiveIntensity(vector<FFT::FloatType> const& samples)
+    vector<FFT::FloatType> naiveIntensity(vector<FFT::FloatType> const& samples) const
     {
         size_t const              n     = samples.size();
         const FFT::FloatType      twoPi = 2.0L * M_PI;
@@ -130,7 +133,7 @@ class FFTTest : public ::testing::Test
 
         for (size_t k = 0; k < n; ++k)
         {
-            FFT::ComplexValue sum = FFT::ComplexValue(0.0, 0.0);
+            auto sum = FFT::ComplexValue(0.0, 0.0);
             for (size_t m = 0; m < n; ++m)
             {
                 const FFT::FloatType angle = -twoPi * FFT::FloatType(k) * FFT::FloatType(m) / FFT::FloatType(n);
@@ -149,7 +152,7 @@ class FFTTest : public ::testing::Test
         return intensities;
     }
 
-    FloatMatrix buildImpulseGrid(FFT::IntType height, FFT::IntType width, FFT::IntType row, FFT::IntType col)
+    FloatMatrix buildImpulseGrid(FFT::IntType height, FFT::IntType width, FFT::IntType row, FFT::IntType col) const
     {
         FloatMatrix grid(height, std::vector<FFT::FloatType>(width, FFT::FloatType(0)));
         assert(row >= 0 && row < height);
@@ -158,7 +161,7 @@ class FFTTest : public ::testing::Test
         return grid;
     }
 
-    FloatMatrix buildPatternGrid(FFT::IntType height, FFT::IntType width)
+    FloatMatrix buildPatternGrid(FFT::IntType height, FFT::IntType width) const
     {
         FloatMatrix grid(height, std::vector<FFT::FloatType>(width, FFT::FloatType(0)));
         for (FFT::IntType row = 0; row < height; ++row)
@@ -174,8 +177,8 @@ class FFTTest : public ::testing::Test
     }
 
   protected:
-    vector<FFT::FloatType> sampleVec;
-    FFT                    fft;
+    vector<FFT::FloatType> sampleVec; // NOSONAR S3656
+    FFT                    fft;       // NOSONAR S3656
 };
 
 // 1.Input random data
@@ -202,9 +205,9 @@ TEST_F(FFTTest, all_zeros_test)
     fft.loadFloatVector(initConstant(0.0));
     auto transformed = fft.transform();
     auto intensity   = fft.intensityVector();
-    for (size_t i = 0; i < intensity.size(); i++)
+    for (auto const& value: intensity)
     {
-        ASSERT_FLOAT_EQ(intensity[i], 0.0);
+        ASSERT_FLOAT_EQ(value, 0.0);
     }
 }
 
@@ -272,7 +275,7 @@ TEST_F(FFTTest, cos_8_test)
     auto intensity   = fft.intensityVector();
 
     ASSERT_GT(intensity[8], 0.0);
-    double peak_intensity = intensity[8];
+    auto const peak_intensity = intensity[8];
 
     for (size_t i = 0; i < intensity.size(); i++)
     {
@@ -292,7 +295,7 @@ TEST_F(FFTTest, e_43_7th_test)
     auto transformed = fft.transform();
     auto intensity   = fft.intensityVector();
 
-    size_t const numPoints   = static_cast<size_t>(fft.numberOfPoints());
+    auto const   numPoints   = static_cast<size_t>(fft.numberOfPoints());
     size_t const positiveBin = 6;
     size_t const mirrorBin   = numPoints - positiveBin;
     auto const   max_it      = std::max_element(intensity.begin(), intensity.begin() + numPoints / 2);
@@ -343,7 +346,7 @@ TEST_F(FFTTest, inverse_fft_recovers_original)
 
     for (int n = 0; n < numPoints; ++n)
     {
-        std::complex<FFT::FloatType> sum = FFT::ComplexValue(0.0, 0.0);
+        auto sum = FFT::ComplexValue(0.0, 0.0);
 
         for (int k = 0; k < numPoints; ++k)
         {
@@ -373,7 +376,7 @@ TEST_F(FFTTest, multi_test)
 
     for (size_t i = 0; i < longSignal.size(); ++i)
     {
-        const FFT::FloatType t = static_cast<FFT::FloatType>(i);
+        auto const t = static_cast<FFT::FloatType>(i);
         longSignal[i] =
             std::cos(2.0L * M_PI * 4.0L * t / windowSize) + 0.5L * std::sin(2.0L * M_PI * 9.0L * t / windowSize);
     }
@@ -414,7 +417,9 @@ TEST_F(FFTTest, multi_test)
 //
 TEST_F(FFTTest, linearity_test)
 {
-    FFT            fft1, fft2, fft_combined;
+    FFT            fft1;
+    FFT            fft2;
+    FFT            fft_combined;
     auto           x1 = initCosine(3.0);
     auto           x2 = initCosine(7.0);
     FFT::FloatType a1 = 0.5;
@@ -453,8 +458,8 @@ TEST_F(FFTTest, impulse_test)
     fft.loadFloatVector(initImpulse(0));
     auto transformed = fft.transform();
     auto intensity   = fft.intensityVector();
-    ASSERT_GT(intensity[0], 0.0);
-    double first_intensity = intensity[0];
+    ASSERT_GT(intensity[0], FFT::FloatType{});
+    auto first_intensity = intensity[0];
     for (size_t i = 1; i < intensity.size(); i++)
     {
         ASSERT_FLOAT_EQ(intensity[i], first_intensity);
@@ -469,7 +474,8 @@ TEST_F(FFTTest, impulse_test)
 // A.Single FFT tests - N inputs and N outputs
 TEST_F(FFTTest, time_shift_test)
 {
-    FFT  fft1, fft2;
+    FFT  fft1;
+    FFT  fft2;
     auto x         = initCosine(5.0);
     auto x_shifted = circularShift(x, 10);
 
@@ -510,13 +516,11 @@ TEST_F(FFTTest, fft2d_impulse_constant_spectrum)
     auto        impulse  = buildImpulseGrid(fft2d.height(), fft2d.width(), 0, 0);
     auto        spectrum = fft2d.transform(impulse);
 
-    for (size_t row = 0; row < spectrum.size(); ++row)
+    auto const rows = std::views::iota(size_t{0}, spectrum.size());
+    auto const cols = std::views::iota(size_t{0}, spectrum[0].size());
+    for (auto const& [row, col]: std::views::cartesian_product(rows, cols))
     {
-        ASSERT_EQ(spectrum[row].size(), static_cast<size_t>(fft2d.width()));
-        for (size_t col = 0; col < spectrum[row].size(); ++col)
-        {
-            EXPECT_NEAR(1.0L, spectrum[row][col].real(), 1e-12L);
-            EXPECT_NEAR(0.0L, spectrum[row][col].imag(), 1e-12L);
-        }
+        EXPECT_NEAR(1.0L, spectrum[row][col].real(), 1e-12L);
+        EXPECT_NEAR(0.0L, spectrum[row][col].imag(), 1e-12L);
     }
 }
