@@ -25,7 +25,7 @@ Lightweight header-only FFT toolkit for embedded-friendly C++ projects. `util::F
 Requires CMake `>= 3.26` and a C++23 compiler (`g++`, `clang++`, or MSVC 2022+).
 
 ```bash
-git submodule update --init --recursive   # fetch cmake-common
+git submodule update --init --recursive   # fetch cmake-common and DebugTrace
 cmake -S . -B build -DCMAKE_BUILD_TYPE=RelWithDebInfo
 cmake --build build --parallel
 ```
