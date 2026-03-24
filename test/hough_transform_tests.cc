@@ -25,7 +25,7 @@ TEST(HoughTransformTest, detects_horizontal_line)
     constexpr int  height = 20;
     HoughTransform hough(width, height, 1.0L, 180);
 
-    GridMatrix    grid(height, std::vector<int>(width, 0));
+    GridMatrix    grid(height, std::vector<HoughTransform::IntType>(width, 0));
     constexpr int targetRow = 7;
     for (int col = 0; col < width; ++col)
     {
@@ -47,7 +47,7 @@ TEST(HoughTransformTest, detects_diagonal_sparse_line)
     constexpr int  size = 12;
     HoughTransform hough(size, size, 1.0L, 180);
 
-    std::vector<std::pair<int, int>> points;
+    std::vector<std::pair<HoughTransform::IntType, HoughTransform::IntType>> points;
     for (int i = 0; i < size; ++i)
     {
         points.emplace_back(i, i);
@@ -69,7 +69,7 @@ TEST(HoughTransformTest, reset_clears_accumulator)
     constexpr int  height = 8;
     HoughTransform hough(width, height, 1.0L, 90);
 
-    GridMatrix grid(height, std::vector<int>(width, 1));
+    GridMatrix grid(height, std::vector<HoughTransform::IntType>(width, 1));
     hough.accumulateEdges(grid, 1);
 
     auto nonEmpty = hough.detectLines(1, 1);

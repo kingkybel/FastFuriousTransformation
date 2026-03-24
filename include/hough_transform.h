@@ -29,7 +29,9 @@
 #include <cassert>
 #include <cmath>
 #include <cstddef>
+#include <cstdint>
 #include <numbers>
+#include <ranges>
 #include <utility>
 #include <vector>
 
@@ -38,8 +40,8 @@ namespace util
 class HoughTransform
 {
   public:
-    using IntType     = int;
-    using FloatType   = double;
+    using IntType     = int64_t;
+    using FloatType   = long double;
     using Accumulator = std::vector<std::vector<IntType>>;
 
     struct Line
@@ -122,7 +124,7 @@ class HoughTransform
     {
         for (auto &row: accumulator_)
         {
-            std::fill(row.begin(), row.end(), IntType(0));
+            std::ranges::fill(row, IntType(0));
         }
     }
 
@@ -131,8 +133,8 @@ class HoughTransform
      * @param input Rows are expected in [0,height) and columns in [0,width).
      * @param threshold Pixel values greater than or equal to `threshold` are interpreted as edges.
      */
-    template <typename PixelType>
-    void accumulateEdges(std::vector<std::vector<PixelType>> const &input, PixelType threshold = PixelType(1))
+    template <typename PixelType, typename PixelType2 = PixelType>
+    void accumulateEdges(std::vector<std::vector<PixelType>> const &input, PixelType2 threshold = PixelType(1))
     {
         assert(static_cast<IntType>(input.size()) == height_);
 
@@ -143,7 +145,7 @@ class HoughTransform
 
             for (IntType col = 0; col < width_; ++col)
             {
-                if (scan[col] < threshold)
+                if (scan[col] < static_cast<PixelType>(threshold))
                 {
                     continue;
                 }
@@ -158,11 +160,11 @@ class HoughTransform
      */
     void accumulateEdgePoints(std::vector<std::pair<IntType, IntType>> const &points)
     {
-        for (auto const &item: points)
+        for (auto const &[width, height]: points)
         {
-            assert(item.first >= 0 && item.first < width_);
-            assert(item.second >= 0 && item.second < height_);
-            accumulatePoint(item.first, item.second);
+            assert(width >= 0 && width < width_);
+            assert(height >= 0 && height < height_);
+            accumulatePoint(width, height);
         }
     }
 
@@ -186,11 +188,11 @@ class HoughTransform
                     continue;
                 }
 
-                lines.push_back(Line{rhoFromIndex(rhoIdx), static_cast<FloatType>(thetaIdx) * thetaStep_, votes});
+                lines.emplace_back(rhoFromIndex(rhoIdx), static_cast<FloatType>(thetaIdx) * thetaStep_, votes);
             }
         }
 
-        std::sort(lines.begin(), lines.end(), [](auto const &lhs, auto const &rhs) { return lhs.votes > rhs.votes; });
+        std::ranges::sort(lines, [](auto const &lhs, auto const &rhs) { return lhs.votes > rhs.votes; });
 
         if (lines.size() > maxLines)
         {
@@ -203,14 +205,14 @@ class HoughTransform
   private:
     void accumulatePoint(IntType x, IntType y)
     {
-        FloatType fx = static_cast<FloatType>(x);
-        FloatType fy = static_cast<FloatType>(y);
+        auto fx = static_cast<FloatType>(x);
+        auto fy = static_cast<FloatType>(y);
 
         for (IntType thetaIdx = 0; thetaIdx < thetaBins_; ++thetaIdx)
         {
             FloatType rho        = fx * cosTheta_[thetaIdx] + fy * sinTheta_[thetaIdx];
             FloatType normalized = (rho + halfRhoRange_) / rhoStep_;
-            IntType   rhoIdx     = static_cast<IntType>(std::round(normalized));
+            auto      rhoIdx     = static_cast<IntType>(std::round(normalized));
 
             if (rhoIdx < 0 || rhoIdx >= rhoBins_)
             {

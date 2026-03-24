@@ -38,9 +38,8 @@ class SpectralFilter
      * @param logPoints Log2(number of points) used by the internal FFT plan.
      * @param sampleRate Sample rate used for the frequency axis.
      */
-    SpectralFilter(IntType logPoints = 10, IntType sampleRate = 1'024)
+    explicit SpectralFilter(IntType logPoints = 10, IntType sampleRate = 1'024)
         : fft_(logPoints, sampleRate)
-        , mode_(Mode::LowPass)
         , sampleRate_(static_cast<FloatType>(sampleRate))
     {
         assert(sampleRate > 0);
@@ -130,20 +129,21 @@ class SpectralFilter
 
     bool shouldKeepFrequency(FloatType frequency) const
     {
+        using enum Mode;
         switch (mode_)
         {
-            case Mode::LowPass:
+            case LowPass:
                 return frequency <= highHz_;
-            case Mode::HighPass:
+            case HighPass:
                 return frequency >= lowHz_;
-            case Mode::BandPass:
+            case BandPass:
                 return frequency >= lowHz_ && frequency <= highHz_;
         }
         return false;
     }
 
     FFTType   fft_;
-    Mode      mode_;
+    Mode      mode_{Mode::LowPass};
     FloatType sampleRate_;
     FloatType nyquist_;
     FloatType binStep_;

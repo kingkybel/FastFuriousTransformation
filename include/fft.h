@@ -63,7 +63,7 @@ class FFT
      * @param sampleRate Sample rate in Hz used for frequency helper conversions.
      * @param calibrate If true, initialize the recording tape with a 1 kHz calibration tone.
      */
-    FFT(IntType logOfNumOfPoints = 10, IntType sampleRate = 1'024, bool calibrate = false)
+    explicit FFT(IntType logOfNumOfPoints = 10, IntType sampleRate = 1'024, bool calibrate = false)
         : logOfPoints_(logOfNumOfPoints)
         , numOfPoints_(powTwo[logOfNumOfPoints])
         , sampleRate_(sampleRate)
@@ -140,7 +140,7 @@ class FFT
 
     IntType numberOfPoints() const
     {
-        return (numOfPoints_);
+        return numOfPoints_;
     }
 
     /**
@@ -188,8 +188,6 @@ class FFT
             return inverseTransform();
         }
 
-        // step = 2 ^ (level-1)
-        // increm = 2 ^ level;
         IntType step = 1;
         for (IntType level = 1; level <= logOfPoints_; level++)
         {
@@ -216,7 +214,7 @@ class FFT
             step *= 2;
         }
 
-        return (transformedComplexVector_);
+        return transformedComplexVector_;
     }
 
     /**
@@ -246,12 +244,12 @@ class FFT
     {
         FloatVector reval;
 
-        for (auto v: transformedComplexVector_)
+        for (auto const &v: transformedComplexVector_)
         {
             reval.push_back(std::abs(v / sqrtOfPoints_));
         }
 
-        return (reval);
+        return reval;
     }
 
     /**
@@ -311,7 +309,7 @@ class FFT
      */
     IntType maxFrequency() const
     {
-        return (sampleRate_);
+        return sampleRate_;
     }
 
     /**
@@ -356,8 +354,7 @@ class FFT
             step *= 2;
         }
 
-        FloatType scale = static_cast<FloatType>(numOfPoints_);
-        for (auto &value: buffer)
+        for (auto scale = static_cast<FloatType>(numOfPoints_); auto &value: buffer)
         {
             value /= scale;
         }
@@ -532,8 +529,7 @@ class FFT2D
 
         if (inverse)
         {
-            FloatType scale = static_cast<FloatType>(plan.numPoints);
-            for (auto &value: buffer)
+            for (auto scale = static_cast<FloatType>(plan.numPoints); auto &value: buffer)
             {
                 value /= scale;
             }
@@ -545,7 +541,7 @@ class FFT2D
     Plan buildPlan(IntType logPoints) const
     {
         assert(logPoints >= 0);
-        constexpr IntType POW_TWO_COUNT = sizeof(powTwo) / sizeof(powTwo[0]);
+        constexpr IntType POW_TWO_COUNT = std::size(powTwo) / sizeof(powTwo[0]);
         assert(logPoints < POW_TWO_COUNT);
 
         Plan plan;
