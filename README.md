@@ -76,3 +76,8 @@ ctest --test-dir build
 ```
 
 `run_tests` links against GoogleTest and marks the binary as a CTest target so you can run the full suite via `ctest`.
+
+## Powered by
+Reduce the smells, keep on top of code-quality. Sonar Qube is run on every push to the `main` branch on GitHub.
+
+[![SonarQubeCloud](assets/icons/logo-sonarqube-cloud-small.png)](https://sonarcloud.io/project/overview?id=kingkybel_TypeTraits)
